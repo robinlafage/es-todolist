@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktodolist_docs=self.webpackChunktodolist_docs||[]).push([[1903],{1912:s=>{s.exports=JSON.parse('{"blogBasePath":"/es-todolist/blog","blogTitle":"Blog","authorsListPath":"/es-todolist/blog/authors"}')}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktodolist_docs=self.webpackChunktodolist_docs||[]).push([[9647],{7121:(s,e,r)=>{r.r(e),r.d(e,{default:()=>l});r(6540);var t=r(4164),c=r(1213),o=r(7559),d=r(2831),u=r(781),a=r(4848);function l(s){return(0,a.jsx)(c.e3,{className:(0,t.A)(o.G.wrapper.docsPages),children:(0,a.jsx)(u.A,{children:(0,d.v)(s.route.routes)})})}}}]);
