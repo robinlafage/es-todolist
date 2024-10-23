@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToDo List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="modal fade" id="addTaskModal">
+        <form id="addTaskForm">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">New task</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="mb-3">
+                                <label for="taskName" class="col-form-label">Name :</label>
+                                <input type="text" class="form-control" id="taskName" name="taskName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="taskDescription" class="col-form-label">Description :</label>
+                                <textarea class="form-control" id="taskDescription"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Add task</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+
+    <nav class="navbar navbar-light fixed-top bg-light">
+        <div class="container">
+            <h1 class="text-center display-3 w-100">ToDo List</h1>
+        </div>
+
+        <div class="container mt-5">
+            <div class="row w-100">
+                <div class="col-1"></div>
+                <div class="col">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#addTaskModal">Add Task</button>
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-secondary">
+                        <i class="bi bi-funnel"></i>
+                        Filter
+                    </button>
+                </div>
+                <div class="col-2">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Sort by
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Name</a></li>
+                            <li><a class="dropdown-item" href="#">Creation date</a></li>
+                            <li><a class="dropdown-item" href="#">Deadline</a></li>
+                            <li><a class="dropdown-item" href="#">Completion status</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="row mt-5"></div>
+    <div class="row mt-4"></div>
+
+    <div class="container mt-5 pt-5">
+        <div class="row mt-5">
+            <div class="col-1"></div>
+            <div class="col">
+                <div class="container rounded bg-dark-subtle p-3 mb-4">
+                    {% for task in tasks %}
+                    <div class="container rounded bg-light py-2 {% if loop.index > 1 %} mt-4 {% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col-auto d-flex justify-content-center align-items-center">
+                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"
+                                    style="transform: scale(1.5);">
+                            </div>
+                            <div class="col">
+                                <div class="row px-2 fs-5"
+                                    style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ task.taskName }}
+                                </div>
+                                <div class="row px-2">
+                                    99/99/9999
+                                </div>
+                                <div class="row px-2"
+                                    style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: pre-line;">
+                                    {{ task.taskDescription | trim }}
+                                </div>
+                            </div>
+                            <div class="col-auto d-flex">
+                                <button type="button" class="btn btn-dark">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="col-auto d-flex">
+                                <button type="button" class="btn btn-dark">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-1"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <script>
+        document.getElementById('addTaskForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Empêche le rechargement de la page
+
+            // Récupérer les valeurs du formulaire
+            const taskName = document.getElementById('taskName').value;
+            const taskDescription = document.getElementById('taskDescription').value;
+
+            try {
+                // Envoyer les données à l'API FastAPI
+                const response = await fetch('/add_task', {
+                    method: 'POST', // Change à POST
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskName, taskDescription }) // Envoyer les données dans le corps
+                });
+
+                // Vérifier la réponse
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'ajout de la tâche');
+                }
+
+                const responseData = await response.json();
+                console.log(responseData); // Affiche la réponse JSON dans la console
+
+                // Redirection vers la page d'accueil
+                window.location.href = '/'; // Remplace par l'URL de la page d'accueil
+            } catch (error) {
+                console.error(error.message);
+            }
+        });
+    </script>
+</body>
+
+</html>
