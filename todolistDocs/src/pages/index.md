@@ -1,0 +1,15 @@
+---
+title: Home
+---
+
+# Welcome to ToDoList documentation
+
+This is the documentation for the individual assignment ToDoList.
+
+## Project owner
+
+Robin Lafage
+
+## Pages
+
+- [Projet setup](/setup)
