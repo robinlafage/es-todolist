@@ -15,6 +15,22 @@
                         <label for="taskDescription" class="col-form-label">Description :</label>
                         <textarea class="form-control" id="taskDescription"></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="taskDeadline" class="col-form-label">Deadline :</label>
+                        <input type="date" class="form-control" id="taskDeadline" name="taskDeadline">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskPriorityInputs" class="col-form-label">Priority:</label>
+                        <div id="taskPriorityInputs">
+                            <button id="taskPriorityHigh" type="button" class="btn btn-outline-danger"
+                                onclick="setPriority('high', false)">High</button>
+                            <button id="taskPriorityMedium" type="button" class="btn btn-outline-warning"
+                                onclick="setPriority('medium', false)">Medium</button>
+                            <button id="taskPriorityLow" type="button" class="btn btn-outline-success"
+                                onclick="setPriority('low', false)">Low</button>
+                        </div>
+                        <input type="hidden" name="taskPriority" id="taskPriority" value=0>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
@@ -43,6 +59,22 @@
                         <label for="taskDescription" class="col-form-label">Description :</label>
                         <textarea class="form-control" id="editTaskDescription"></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="taskDeadline" class="col-form-label">Deadline :</label>
+                        <input type="date" class="form-control" id="editTaskDeadline" name="taskDeadline">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTaskPriorityInputs" class="col-form-label">Priority:</label>
+                        <div id="editTaskPriorityInputs">
+                            <button id="editTaskPriorityHigh" type="button" class="btn btn-outline-danger"
+                                onclick="setPriority('high', true)">High</button>
+                            <button id="editTaskPriorityMedium" type="button" class="btn btn-outline-warning"
+                                onclick="setPriority('medium', true)">Medium</button>
+                            <button id="editTaskPriorityLow" type="button" class="btn btn-outline-success"
+                                onclick="setPriority('low', true)">Low</button>
+                        </div>
+                        <input type="hidden" name="taskPriority" id="editTaskPriority" value=0>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
@@ -63,7 +95,7 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="deleteTaskId" name="taskId">
-                    <p>Are you sure you want to delete this task?</p>
+                    <p>Are you sure to delete this task?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
@@ -73,3 +105,69 @@
         </div>
     </form>
 </div>
+
+
+<script>
+    function setPriority(priority, edit) {
+        if (edit) {
+            highButton = document.getElementById('editTaskPriorityHigh');
+            mediumButton = document.getElementById('editTaskPriorityMedium');
+            lowButton = document.getElementById('editTaskPriorityLow');
+            priorityInput = document.getElementById('editTaskPriority');
+        } else {
+            highButton = document.getElementById('taskPriorityHigh');
+            mediumButton = document.getElementById('taskPriorityMedium');
+            lowButton = document.getElementById('taskPriorityLow');
+            priorityInput = document.getElementById('taskPriority');
+        }
+
+        function toggleButton(button, outlineClass, filledClass) {
+            if (button.classList.contains(outlineClass)) {
+                button.classList.remove(outlineClass);
+                button.classList.add(filledClass);
+            } else {
+                button.classList.remove(filledClass);
+                button.classList.add(outlineClass);
+            }
+        }
+
+        if (priority === 'high') {
+            toggleButton(highButton, 'btn-outline-danger', 'btn-danger');
+            mediumButton.classList.remove('btn-warning');
+            mediumButton.classList.add('btn-outline-warning');
+            lowButton.classList.remove('btn-success');
+            lowButton.classList.add('btn-outline-success');
+
+            if (highButton.classList.contains('btn-danger')) {
+                priorityInput.value = 3;
+            } else {
+                priorityInput.value = 0;
+            }
+        } else if (priority === 'medium') {
+            toggleButton(mediumButton, 'btn-outline-warning', 'btn-warning');
+            highButton.classList.remove('btn-danger');
+            highButton.classList.add('btn-outline-danger');
+            lowButton.classList.remove('btn-success');
+            lowButton.classList.add('btn-outline-success');
+
+            if (mediumButton.classList.contains('btn-warning')) {
+                priorityInput.value = 2;
+            } else {
+                priorityInput.value = 0;
+            }
+        } else if (priority === 'low') {
+            toggleButton(lowButton, 'btn-outline-success', 'btn-success');
+            highButton.classList.remove('btn-danger');
+            highButton.classList.add('btn-outline-danger');
+            mediumButton.classList.remove('btn-warning');
+            mediumButton.classList.add('btn-outline-warning');
+
+            if (lowButton.classList.contains('btn-success')) {
+                priorityInput.value = 1;
+            } else {
+                priorityInput.value = 0;
+            }
+        }
+
+    }
+</script>

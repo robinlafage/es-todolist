@@ -4,10 +4,12 @@ from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from databases import Database
+
+import datetime
 
 USER_ID = 1 #Simuler un utilisateur connecté
 
@@ -27,7 +29,7 @@ class TaskModel(Base):
     taskDescription = Column(String, nullable=True)
     taskPriority = Column(Integer, nullable=True)
     taskStatus = Column(Integer, nullable=True)
-    taskDeadline = Column(String, nullable=True)
+    taskDeadline = Column(DateTime, nullable=True)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -49,6 +51,8 @@ class Task(BaseModel):
     taskId: int = None
     taskName: str = None
     taskDescription: str = None
+    taskDeadline: datetime.date = None
+    taskPriority: int = None
 
 templates = Jinja2Templates(directory="../html")
 
@@ -59,10 +63,10 @@ async def index(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/add_task")
 async def add_task(task: Task, db: Session = Depends(get_db)):
-    print(f"Nom: {task.taskName}, Description: {task.taskDescription}")
+    print(f"Nom: {task.taskName}, Description: {task.taskDescription}, Deadline: {task.taskDeadline}, Priorité: {task.taskPriority}")
 
     try:
-        newTask = TaskModel(taskName=task.taskName, taskDescription=task.taskDescription, userId=USER_ID)
+        newTask = TaskModel(taskName=task.taskName, taskDescription=task.taskDescription, taskDeadline=task.taskDeadline, taskPriority=task.taskPriority, userId=USER_ID)
         db.add(newTask)
         db.commit()
         db.refresh(newTask)
@@ -75,7 +79,7 @@ async def edit_task(task: Task, db: Session = Depends(get_db)):
     print(f"Id: {task.taskId}, Nom: {task.taskName}, Description: {task.taskDescription}")
 
     try:
-        db.query(TaskModel).filter(TaskModel.id == task.taskId).update({"taskName": task.taskName, "taskDescription": task.taskDescription})
+        db.query(TaskModel).filter(TaskModel.id == task.taskId).update({"taskName": task.taskName, "taskDescription": task.taskDescription, "taskDeadline": task.taskDeadline, "taskPriority": task.taskPriority})
         db.commit()
         return JSONResponse(content={"status": "success"})
     except Exception as e:

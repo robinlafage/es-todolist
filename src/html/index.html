@@ -61,30 +61,49 @@
                     {% for task in tasks %}
                     <div class="container rounded bg-light py-2 {% if loop.index > 1 %} mt-4 {% endif %}">
                         <div class="row align-items-center">
-                            <div class="col-auto d-flex justify-content-center align-items-center">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"
+                            <div class="col-auto d-flex flex-column justify-content-center align-items-center">
+                                {% if task.taskPriority > 0 %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30">
+                                    <rect x="3" y="3" width="1.5" height="24" fill="gray" />
+                                    {% if task.taskPriority == 1 %}
+                                    <polygon points="4.5,3 18,9 4.5,15" fill="green" />
+                                    {% elif task.taskPriority == 2 %}
+                                    <polygon points="4.5,3 18,9 4.5,15" fill="orange" />
+                                    {% elif task.taskPriority == 3 %}
+                                    <polygon points="4.5,3 18,9 4.5,15" fill="red" />
+                                    {% endif %}
+                                </svg>
+                                {% endif %}
+                                <input class="form-check-input mt-2" type="checkbox" value="" id="flexCheckDefault"
                                     style="transform: scale(1.5);">
                             </div>
+
                             <div class="col overflow-x-scroll">
                                 <div class="row px-2 fs-5"
                                     style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     {{ task.taskName }}
                                 </div>
                                 <div class="row px-2">
-                                    {{ task.taskDeadline }}
+                                    {% if task.taskDeadline %}
+                                    {{ task.taskDeadline.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                    No deadline
+                                    {% endif %}
                                 </div>
                                 <div class="row px-2"
                                     style="word-wrap: break-word; text-overflow: ellipsis; white-space: pre-line;">
-                                    {{ task.taskDescription}}
+                                    {{ task.taskDescription }}
                                 </div>
                             </div>
+
                             <div class="col-auto d-flex">
                                 <button type="button" class="btn btn-dark" title="Edit task" data-bs-toggle="modal"
                                     data-bs-target="#editTaskModal"
-                                    onclick="editTask('{{ task.id }}', '{{ task.taskName }}', `{{ task.taskDescription }}`)">
+                                    onclick="editTask('{{ task.id }}', '{{ task.taskName }}', `{{ task.taskDescription }}`, `{{ task.taskDeadline }}`, '{{ task.taskPriority}}')">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
                             </div>
+
                             <div class="col-auto d-flex">
                                 <button type="button" class="btn btn-dark" title="Delete task" data-bs-toggle="modal"
                                     data-bs-target="#deleteTaskModal" onclick="deleteTask('{{ task.id }}')">
@@ -93,7 +112,6 @@
                             </div>
                         </div>
                     </div>
-
                     {% endfor %}
                 </div>
             </div>
@@ -111,39 +129,89 @@
 
             const taskName = document.getElementById('taskName').value;
             const taskDescription = document.getElementById('taskDescription').value;
+            const taskDeadline = document.getElementById('taskDeadline').value;
+            const taskPriority = document.getElementById('taskPriority').value;
 
-            try {
-                const response = await fetch('/add_task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ taskName, taskDescription })
-                });
+            if (taskDeadline != '') {
+                try {
+                    const response = await fetch('/add_task', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ taskName, taskDescription, taskDeadline, taskPriority })
+                    });
 
-                if (!response.ok) {
-                    throw new Error('Erreur lors de l\'ajout de la tâche');
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de l\'ajout de la tâche');
+                    }
+
+                    const responseData = await response.json();
+                    console.log(responseData);
+
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error(error.message);
                 }
+            } else {
+                try {
+                    const response = await fetch('/add_task', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ taskName, taskDescription, taskPriority })
+                    });
 
-                const responseData = await response.json();
-                console.log(responseData);
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de l\'ajout de la tâche');
+                    }
 
-                window.location.href = '/';
-            } catch (error) {
-                console.error(error.message);
+                    const responseData = await response.json();
+                    console.log(responseData);
+
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error(error.message);
+                }
             }
         });
     </script>
 
     <script>
-        function editTask(taskId, taskName, taskDescription) {
+        function editTask(taskId, taskName, taskDescription, taskDeadline, taskPriority) {
             console.log(taskId);
             console.log(taskName);
             console.log(taskDescription);
+            console.log(taskDeadline);
+            console.log(taskPriority);
+
+            dateDeadiline = new Date(taskDeadline);
+            if (!isNaN(dateDeadiline)) {
+                let year = dateDeadiline.getFullYear();
+                let month = String(dateDeadiline.getMonth() + 1).padStart(2, '0');
+                let day = String(dateDeadiline.getDate()).padStart(2, '0');
+
+                let formattedDate = `${year}-${month}-${day}`;
+                document.getElementById("editTaskDeadline").value = formattedDate;
+            } else {
+                document.getElementById("editTaskDeadline").value = '';
+            }
 
             document.getElementById("editTaskId").value = taskId;
             document.getElementById("editTaskName").value = taskName;
             document.getElementById("editTaskDescription").value = taskDescription;
+
+            if (taskPriority == 3) {
+                document.getElementById("editTaskPriorityHigh").classList.remove('btn-outline-danger');
+                document.getElementById("editTaskPriorityHigh").classList.add('btn-danger');
+            } else if (taskPriority == 2) {
+                document.getElementById("editTaskPriorityMedium").classList.remove('btn-outline-warning');
+                document.getElementById("editTaskPriorityMedium").classList.add('btn-warning');
+            } else if (taskPriority == 1) {
+                document.getElementById("editTaskPriorityLow").classList.remove('btn-outline-success');
+                document.getElementById("editTaskPriorityLow").classList.add('btn-success');
+            }
         }
 
         document.getElementById('editTaskForm').addEventListener('submit', async function (event) {
@@ -152,26 +220,51 @@
             const taskId = document.getElementById('editTaskId').value;
             const taskName = document.getElementById('editTaskName').value;
             const taskDescription = document.getElementById('editTaskDescription').value;
+            const taskDeadline = document.getElementById('editTaskDeadline').value;
+            const taskPriority = document.getElementById('editTaskPriority').value;
 
-            try {
-                const response = await fetch('/edit_task', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ taskId, taskName, taskDescription })
-                });
+            if (taskDeadline != '') {
+                try {
+                    const response = await fetch('/edit_task', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ taskId, taskName, taskDescription, taskDeadline, taskPriority })
+                    });
 
-                if (!response.ok) {
-                    throw new Error('Erreur lors de l\'edition de la tâche');
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de l\'edition de la tâche');
+                    }
+
+                    const responseData = await response.json();
+                    console.log(responseData);
+
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error(error.message);
                 }
+            } else {
+                try {
+                    const response = await fetch('/edit_task', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ taskId, taskName, taskDescription, taskPriority })
+                    });
 
-                const responseData = await response.json();
-                console.log(responseData);
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de l\'edition de la tâche');
+                    }
 
-                window.location.href = '/';
-            } catch (error) {
-                console.error(error.message);
+                    const responseData = await response.json();
+                    console.log(responseData);
+
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error(error.message);
+                }
             }
         });
     </script>
