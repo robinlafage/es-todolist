@@ -11,36 +11,8 @@
 </head>
 
 <body>
-    <div class="modal fade" id="addTaskModal">
-        <form id="addTaskForm">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">New task</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form>
-                            <div class="mb-3">
-                                <label for="taskName" class="col-form-label">Name :</label>
-                                <input type="text" class="form-control" id="taskName" name="taskName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="taskDescription" class="col-form-label">Description :</label>
-                                <textarea class="form-control" id="taskDescription"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Add task</button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
 
-
+    {% include 'modals.html' %}
 
     <nav class="navbar navbar-light fixed-top bg-light">
         <div class="container">
@@ -99,21 +71,24 @@
                                     {{ task.taskName }}
                                 </div>
                                 <div class="row px-2">
-                                    99/99/9999
+                                    {{ task.taskDeadline }}
                                 </div>
                                 <div class="row px-2"
                                     style="word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; white-space: pre-line;">
-                                    {{ task.taskDescription | trim }}
+                                    {{ task.taskDescription}}
                                 </div>
                             </div>
                             <div class="col-auto d-flex">
-                                <button type="button" class="btn btn-dark">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn btn-dark" title="Edit task" data-bs-toggle="modal"
+                                    data-bs-target="#editTaskModal"
+                                    onclick="editTask('{{ task.id }}', '{{ task.taskName }}', `{{ task.taskDescription }}`)">
+                                    <i class="bi bi-pencil-square"></i>
                                 </button>
                             </div>
                             <div class="col-auto d-flex">
-                                <button type="button" class="btn btn-dark">
-                                    <i class="bi bi-pencil-square"></i>
+                                <button type="button" class="btn btn-dark" title="Delete task" data-bs-toggle="modal"
+                                    data-bs-target="#deleteTaskModal" onclick="deleteTask('{{ task.id }}')">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -132,32 +107,104 @@
 
     <script>
         document.getElementById('addTaskForm').addEventListener('submit', async function (event) {
-            event.preventDefault(); // Empêche le rechargement de la page
+            event.preventDefault();
 
-            // Récupérer les valeurs du formulaire
             const taskName = document.getElementById('taskName').value;
             const taskDescription = document.getElementById('taskDescription').value;
 
             try {
-                // Envoyer les données à l'API FastAPI
                 const response = await fetch('/add_task', {
-                    method: 'POST', // Change à POST
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ taskName, taskDescription }) // Envoyer les données dans le corps
+                    body: JSON.stringify({ taskName, taskDescription })
                 });
 
-                // Vérifier la réponse
                 if (!response.ok) {
                     throw new Error('Erreur lors de l\'ajout de la tâche');
                 }
 
                 const responseData = await response.json();
-                console.log(responseData); // Affiche la réponse JSON dans la console
+                console.log(responseData);
 
-                // Redirection vers la page d'accueil
-                window.location.href = '/'; // Remplace par l'URL de la page d'accueil
+                window.location.href = '/';
+            } catch (error) {
+                console.error(error.message);
+            }
+        });
+    </script>
+
+    <script>
+        function editTask(taskId, taskName, taskDescription) {
+            console.log(taskId);
+            console.log(taskName);
+            console.log(taskDescription);
+
+            document.getElementById("editTaskId").value = taskId;
+            document.getElementById("editTaskName").value = taskName;
+            document.getElementById("editTaskDescription").value = taskDescription;
+        }
+
+        document.getElementById('editTaskForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const taskId = document.getElementById('editTaskId').value;
+            const taskName = document.getElementById('editTaskName').value;
+            const taskDescription = document.getElementById('editTaskDescription').value;
+
+            try {
+                const response = await fetch('/edit_task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskId, taskName, taskDescription })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'edition de la tâche');
+                }
+
+                const responseData = await response.json();
+                console.log(responseData);
+
+                window.location.href = '/';
+            } catch (error) {
+                console.error(error.message);
+            }
+        });
+    </script>
+
+    <script>
+        function deleteTask(taskId) {
+            console.log(taskId);
+
+            document.getElementById("deleteTaskId").value = taskId;
+        }
+
+        document.getElementById('deleteTaskForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const taskId = document.getElementById('deleteTaskId').value;
+
+            try {
+                const response = await fetch('/delete_task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la suppression de la tâche');
+                }
+
+                const responseData = await response.json();
+                console.log(responseData);
+
+                window.location.href = '/';
             } catch (error) {
                 console.error(error.message);
             }

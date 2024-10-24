@@ -45,24 +45,15 @@ def get_db():
     finally:
         db.close()
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
-
 class Task(BaseModel):
-    taskName: str
+    taskId: int = None
+    taskName: str = None
     taskDescription: str = None
 
 templates = Jinja2Templates(directory="../html")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, db: Session = Depends(get_db)): 
-    #Filter les taches en fonction de userid
     tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).all()
     return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks})
 
@@ -75,6 +66,28 @@ async def add_task(task: Task, db: Session = Depends(get_db)):
         db.add(newTask)
         db.commit()
         db.refresh(newTask)
+        return JSONResponse(content={"status": "success"})
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)})
+    
+@app.post("/edit_task")
+async def edit_task(task: Task, db: Session = Depends(get_db)):
+    print(f"Id: {task.taskId}, Nom: {task.taskName}, Description: {task.taskDescription}")
+
+    try:
+        db.query(TaskModel).filter(TaskModel.id == task.taskId).update({"taskName": task.taskName, "taskDescription": task.taskDescription})
+        db.commit()
+        return JSONResponse(content={"status": "success"})
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)})
+    
+@app.post("/delete_task")
+async def delete_task(task: Task, db: Session = Depends(get_db)):
+    print(f"Id: {task.taskId}")
+
+    try:
+        db.query(TaskModel).filter(TaskModel.id == task.taskId).delete()
+        db.commit()
         return JSONResponse(content={"status": "success"})
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)})
