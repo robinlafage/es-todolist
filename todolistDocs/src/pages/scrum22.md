@@ -28,7 +28,3 @@ Task management
 | User changes the priority                                          | The task is updated with the new priority                                                                         |
 
 [Previous](/scrum21)
-
-<p align="right">
-    [Next](/scrum23)
-</p>
