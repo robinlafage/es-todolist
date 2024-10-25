@@ -58,9 +58,16 @@ class Task(BaseModel):
 templates = Jinja2Templates(directory="../html")
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request, db: Session = Depends(get_db)): 
-    tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).all()
-    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks})
+async def index(request: Request, db: Session = Depends(get_db)):
+    queryParams = request.query_params
+    sortBy = queryParams.get("sortBy")
+    mapSort = {"Default": TaskModel.id, "Name": TaskModel.taskName, "Priority": TaskModel.taskPriority, "Deadline": TaskModel.taskDeadline, "Completion status": TaskModel.taskStatus}
+
+    if sortBy in mapSort:
+        tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy]).all()
+    else:
+        tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
+    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy})
 
 @app.post("/add_task")
 async def add_task(task: Task, db: Session = Depends(get_db)):

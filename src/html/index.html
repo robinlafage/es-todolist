@@ -34,15 +34,21 @@
                 </div>
                 <div class="col-2">
                     <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        <input type="hidden" id="sortBySaved" value="{{ sortBy }}">
+                        <button id="sortBy" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
+                            {% if sortBy == 'Default' or sortBy == None or sortBy == 'None' %}
                             Sort by
+                            {% else %}
+                            {{ sortBy }}
+                            {% endif %}
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Name</a></li>
-                            <li><a class="dropdown-item" href="#">Creation date</a></li>
-                            <li><a class="dropdown-item" href="#">Deadline</a></li>
-                            <li><a class="dropdown-item" href="#">Completion status</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Default')">Default</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Name')">Name</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Deadline')">Deadline</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Priority')">Priority</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Completion status')">Completion status</a></li>
                         </ul>
                     </div>
                 </div>
@@ -149,7 +155,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/';
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -170,7 +176,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/';
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -240,7 +246,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/';
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -261,7 +267,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/';
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -296,8 +302,8 @@
 
                 const responseData = await response.json();
                 console.log(responseData);
-
-                window.location.href = '/';
+                
+                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
             } catch (error) {
                 console.error(error.message);
             }
@@ -330,10 +336,24 @@
                 const responseData = await response.json();
                 console.log(responseData);
 
-                window.location.href = '/';
+                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
             } catch (error) {
                 console.error(error.message);
             }
+        }
+    </script>
+
+    <script>
+        function sortBy(sortBy) {
+            console.log(sortBy);
+
+            if (sortBy == 'Default') {
+                document.getElementById("sortBy").innerHTML = "Sort by ";
+            } else {
+                document.getElementById("sortBy").innerHTML = sortBy;
+            }
+
+            window.location.href = '/?sortBy=' + sortBy;
         }
     </script>
 </body>
