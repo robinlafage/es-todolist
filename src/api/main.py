@@ -53,6 +53,7 @@ class Task(BaseModel):
     taskDescription: str = None
     taskDeadline: datetime.date = None
     taskPriority: int = None
+    taskStatus: int = 0
 
 templates = Jinja2Templates(directory="../html")
 
@@ -66,7 +67,7 @@ async def add_task(task: Task, db: Session = Depends(get_db)):
     print(f"Nom: {task.taskName}, Description: {task.taskDescription}, Deadline: {task.taskDeadline}, Priorité: {task.taskPriority}")
 
     try:
-        newTask = TaskModel(taskName=task.taskName, taskDescription=task.taskDescription, taskDeadline=task.taskDeadline, taskPriority=task.taskPriority, userId=USER_ID)
+        newTask = TaskModel(taskName=task.taskName, taskDescription=task.taskDescription, taskDeadline=task.taskDeadline, taskPriority=task.taskPriority, taskStatus=task.taskStatus, userId=USER_ID)
         db.add(newTask)
         db.commit()
         db.refresh(newTask)
@@ -96,3 +97,13 @@ async def delete_task(task: Task, db: Session = Depends(get_db)):
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)})
 
+@app.post("/change_status")
+async def change_status(task: Task, db: Session = Depends(get_db)):
+    print(f"Id: {task.taskId}, Status: {task.taskStatus}")
+
+    try:
+        db.query(TaskModel).filter(TaskModel.id == task.taskId).update({"taskStatus": task.taskStatus})
+        db.commit()
+        return JSONResponse(content={"status": "success"})
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)})

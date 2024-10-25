@@ -59,7 +59,7 @@
             <div class="col overflow-auto">
                 <div class="container rounded bg-dark-subtle p-3 mb-4">
                     {% for task in tasks %}
-                    <div class="container rounded bg-light py-2 {% if loop.index > 1 %} mt-4 {% endif %}">
+                    <div class="container rounded py-2 {% if task.taskStatus == 1 %} text-decoration-line-through {% endif %} {% if task.taskStatus == 0 %} bg-light {% else %} bg-body-secondary {% endif %} {% if loop.index > 1 %} mt-4 {% endif %}">
                         <div class="row align-items-center">
                             <div class="col-auto d-flex flex-column justify-content-center align-items-center">
                                 {% if task.taskPriority > 0 %}
@@ -74,8 +74,8 @@
                                     {% endif %}
                                 </svg>
                                 {% endif %}
-                                <input class="form-check-input mt-2" type="checkbox" value="" id="flexCheckDefault"
-                                    style="transform: scale(1.5);">
+                                <input class="form-check-input mt-2" type="checkbox" value="" id="changeStatus"
+                                    style="transform: scale(1.5);" onclick="changeStatus('{{ task.id }}', '{{ task.taskStatus }}')" {% if task.taskStatus == 1 %} checked {% endif %}>
                             </div>
 
                             <div class="col overflow-x-scroll">
@@ -302,6 +302,39 @@
                 console.error(error.message);
             }
         });
+    </script>
+
+    <script>
+        async function changeStatus(taskId, taskStatus) {
+            
+            checkbox = document.getElementById('changeStatus');
+            if (taskStatus == 1) {
+                taskStatus = 0;
+            } else {
+                taskStatus = 1;
+            }
+
+            try {
+                const response = await fetch('/change_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskId, taskStatus })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors du changement de status de la tâche');
+                }
+
+                const responseData = await response.json();
+                console.log(responseData);
+
+                window.location.href = '/';
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
     </script>
 </body>
 
