@@ -33,3 +33,7 @@ Display management
 | User changes the details                                            | The task is updated and the list is sorted  |
 
 [Previous](/scrum22)
+
+<p align="right">
+    [Next](/scrum24)
+</p>
