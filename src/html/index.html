@@ -26,17 +26,52 @@
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#addTaskModal">Add Task</button>
                 </div>
-                <div class="col-1">
-                    <button type="button" class="btn btn-secondary">
-                        <i class="bi bi-funnel"></i>
-                        Filter
-                    </button>
+                <div class="col-1 me-4">
+                    <div class="dropdown">
+                        <button id="filterBy" class="btn btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-funnel"></i>
+                            Filter by
+                        </button>
+                        <ul class="dropdown-menu">
+                            <form id="filterForm">
+                                <li class="dropdown-item">
+                                    <input type="checkbox" class="form-check-input me-2" id="lowPriority" {% if 'low' in filterBy %} checked {% endif %}>
+                                    <label for="lowPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : Low</label>
+                                </li>
+                                <li class="dropdown-item">
+                                    <input type="checkbox" class="form-check-input me-2" id="mediumPriority" {% if 'medium' in filterBy %} checked {% endif %}>
+                                    <label for="mediumPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : Medium</label>
+                                </li>
+                                <li class="dropdown-item">
+                                    <input type="checkbox" class="form-check-input me-2" id="highPriority" {% if 'high' in filterBy %} checked {% endif %}>
+                                    <label for="highPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : High</label>
+                                </li>
+                                <li class="dropdown-item">
+                                    <input type="checkbox" class="form-check-input me-2" id="completed" {% if 'completed' in filterBy %} checked {% endif %}>
+                                    <label for="completed" class="form-check-label"
+                                        onclick="event.stopPropagation()">Completed</label>
+                                </li>
+                                <li class="dropdown-item">
+                                    <input type="checkbox" class="form-check-input me-2" id="uncompleted" {% if 'uncompleted' in filterBy %} checked {% endif %}>
+                                    <label for="uncompleted" class="form-check-label"
+                                        onclick="event.stopPropagation()">Uncompleted</label>
+                                </li>
+                                <li class="dropdown-item">
+                                    <button type="submit" class="btn btn-sm btn-success">Apply filters</button>
+                            </form>
+                        </ul>
+                    </div>
+
                 </div>
                 <div class="col-2">
                     <div class="dropdown">
                         <input type="hidden" id="sortBySaved" value="{{ sortBy }}">
-                        <button id="sortBy" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
+                        <button id="sortBy" class="btn btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             {% if sortBy == 'Default' or sortBy == None or sortBy == 'None' %}
                             Sort by
                             {% else %}
@@ -48,7 +83,8 @@
                             <li><a class="dropdown-item" onclick="sortBy('Name')">Name</a></li>
                             <li><a class="dropdown-item" onclick="sortBy('Deadline')">Deadline</a></li>
                             <li><a class="dropdown-item" onclick="sortBy('Priority')">Priority</a></li>
-                            <li><a class="dropdown-item" onclick="sortBy('Completion status')">Completion status</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Completion status')">Completion status</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -65,7 +101,8 @@
             <div class="col overflow-auto">
                 <div class="container rounded bg-dark-subtle p-3 mb-4">
                     {% for task in tasks %}
-                    <div class="container rounded py-2 {% if task.taskStatus == 1 %} text-decoration-line-through {% endif %} {% if task.taskStatus == 0 %} bg-light {% else %} bg-body-secondary {% endif %} {% if loop.index > 1 %} mt-4 {% endif %}">
+                    <div
+                        class="container rounded py-2 {% if task.taskStatus == 1 %} text-decoration-line-through {% endif %} {% if task.taskStatus == 0 %} bg-light {% else %} bg-body-secondary {% endif %} {% if loop.index > 1 %} mt-4 {% endif %}">
                         <div class="row align-items-center">
                             <div class="col-auto d-flex flex-column justify-content-center align-items-center">
                                 {% if task.taskPriority > 0 %}
@@ -81,7 +118,9 @@
                                 </svg>
                                 {% endif %}
                                 <input class="form-check-input mt-2" type="checkbox" value="" id="changeStatus"
-                                    style="transform: scale(1.5);" onclick="changeStatus('{{ task.id }}', '{{ task.taskStatus }}')" {% if task.taskStatus == 1 %} checked {% endif %}>
+                                    style="transform: scale(1.5);"
+                                    onclick="changeStatus('{{ task.id }}', '{{ task.taskStatus }}')" {% if
+                                    task.taskStatus==1 %} checked {% endif %}>
                             </div>
 
                             <div class="col overflow-x-scroll">
@@ -302,7 +341,7 @@
 
                 const responseData = await response.json();
                 console.log(responseData);
-                
+
                 window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
             } catch (error) {
                 console.error(error.message);
@@ -312,7 +351,7 @@
 
     <script>
         async function changeStatus(taskId, taskStatus) {
-            
+
             checkbox = document.getElementById('changeStatus');
             if (taskStatus == 1) {
                 taskStatus = 0;
@@ -355,6 +394,40 @@
 
             window.location.href = '/?sortBy=' + sortBy;
         }
+    </script>
+
+    <script>
+        document.getElementById('filterForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            let lowPriority = document.getElementById('lowPriority').checked;
+            let mediumPriority = document.getElementById('mediumPriority').checked;
+            let highPriority = document.getElementById('highPriority').checked;
+            let completed = document.getElementById('completed').checked;
+            let uncompleted = document.getElementById('uncompleted').checked;
+
+            let filterBy = '';
+
+            if (lowPriority) {
+                filterBy += 'low+';
+            }
+            if (mediumPriority) {
+                filterBy += 'medium+';
+            }
+            if (highPriority) {
+                filterBy += 'high+';
+            }
+            if (completed) {
+                filterBy += 'completed+';
+            }
+            if (uncompleted) {
+                filterBy += 'uncompleted+';
+            }
+
+            console.log(filterBy);
+
+            window.location.href = '/?filterBy=' + filterBy;
+        });
     </script>
 </body>
 

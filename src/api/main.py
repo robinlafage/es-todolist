@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from databases import Database
@@ -67,7 +67,41 @@ async def index(request: Request, db: Session = Depends(get_db)):
         tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy]).all()
     else:
         tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
-    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy})
+
+    filterBy = queryParams.get("filterBy")
+    if filterBy:
+        filterBy = filterBy.split()
+        print(f"Filter by: {filterBy}")
+
+        filters = [TaskModel.userId == USER_ID]
+
+        status_filters = []
+        priority_filters = []
+
+        for f in filterBy:
+            if f == "completed":
+                status_filters.append(TaskModel.taskStatus == 1)
+            elif f == "uncompleted":
+                status_filters.append(TaskModel.taskStatus == 0)
+            elif f == "high":
+                priority_filters.append(TaskModel.taskPriority == 3)
+            elif f == "medium":
+                priority_filters.append(TaskModel.taskPriority == 2)
+            elif f == "low":
+                priority_filters.append(TaskModel.taskPriority == 1)
+
+        if status_filters:
+            filters.append(or_(*status_filters))
+
+        if priority_filters:
+            filters.append(or_(*priority_filters))
+
+        tasks = db.query(TaskModel).filter(*filters).order_by(TaskModel.id).all()
+    else:
+        filterBy = []
+
+
+    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy})
 
 @app.post("/add_task")
 async def add_task(task: Task, db: Session = Depends(get_db)):
