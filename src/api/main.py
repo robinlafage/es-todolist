@@ -16,19 +16,20 @@ templates = Jinja2Templates(directory="../html")
 
 # -------------------------------Database--------------------------------
 Base = declarative_base()
-DATABASE_URL = "sqlite:///./database2.db"
+# DATABASE_URL = "sqlite:///./database2.db"
+DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
 
 class TaskModel(Base):
     __tablename__ = "Task"
     id = Column(Integer, primary_key=True, index=True)
-    userId = Column(String)
-    taskName = Column(String)
-    taskDescription = Column(String, nullable=True)
+    userId = Column(String(255))
+    taskName = Column(String(255))
+    taskDescription = Column(String(255), nullable=True)
     taskPriority = Column(Integer, nullable=True)
     taskStatus = Column(Integer, nullable=True)
     taskDeadline = Column(DateTime, nullable=True)
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 database = Database(DATABASE_URL)
