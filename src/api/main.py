@@ -28,7 +28,7 @@ class TaskModel(Base):
     taskStatus = Column(Integer, nullable=True)
     taskDeadline = Column(DateTime, nullable=True)
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 database = Database(DATABASE_URL)
@@ -58,7 +58,8 @@ COGNITO_REGION = 'us-east-1'
 USER_POOL_ID = 'us-east-1_JlC5VFh6U'
 CLIENT_ID = '3fakplt730ef8nvvnd9oj2l6dv'
 COGNITO_DOMAIN = 'https://es-todolist.auth.us-east-1.amazoncognito.com'
-REDIRECT_URI = 'http://localhost:8000/callback'
+# REDIRECT_URI = 'http://localhost:8000/callback'
+REDIRECT_URI = 'https://es-ua.ddns.net/callback'
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{COGNITO_DOMAIN}/oauth2/authorize",
