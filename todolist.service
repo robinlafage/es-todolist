@@ -1,0 +1,12 @@
+[Unit]
+Description=ToDo List Application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/es-todolist/src/api
+ExecStart=/bin/bash /home/ubuntu/es-todolist/src/api/start.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
