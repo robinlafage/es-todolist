@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, Depends, HTTPException, Request, Cookie
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -16,8 +17,8 @@ templates = Jinja2Templates(directory="../html")
 
 # -------------------------------Database--------------------------------
 Base = declarative_base()
-# DATABASE_URL = "sqlite:///./database2.db"
-DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
+DATABASE_URL = "sqlite:///./database2.db"
+# DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
 
 class TaskModel(Base):
     __tablename__ = "Task"
@@ -51,6 +52,10 @@ class Task(BaseModel):
     taskPriority: int = None
     taskStatus: int = 0
 
+    model_config = {
+        "from_attributes": True  # Active la compatibilité avec SQLAlchemy
+    }
+
 # -------------------------------Authentication--------------------------------
 
 USER_ID = None # Variable globale pour stocker l'ID de l'utilisateur connecté
@@ -59,8 +64,8 @@ COGNITO_REGION = 'us-east-1'
 USER_POOL_ID = 'us-east-1_JlC5VFh6U'
 CLIENT_ID = '3fakplt730ef8nvvnd9oj2l6dv'
 COGNITO_DOMAIN = 'https://es-todolist.auth.us-east-1.amazoncognito.com'
-# REDIRECT_URI = 'http://localhost:8000/callback'
-REDIRECT_URI = 'https://es-ua.ddns.net/callback'
+REDIRECT_URI = 'http://localhost:8000/callback'
+# REDIRECT_URI = 'https://es-ua.ddns.net/callback'
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{COGNITO_DOMAIN}/oauth2/authorize",
@@ -131,6 +136,19 @@ async def index(request: Request, db: Session = Depends(get_db), user: dict = De
     USER_ID = user["sub"]
 
     queryParams = request.query_params
+    allTasks = await get_all_tasks(db, user, queryParams)
+    print(allTasks)
+    tasks = allTasks["tasks"]
+    sortBy = allTasks["sortBy"]
+    filterBy = allTasks["filterBy"]
+    
+
+    print(tasks)
+    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "user": user})
+
+
+@app.get("/get_all_tasks")
+async def get_all_tasks(db: Session = Depends(get_db), user: dict = Depends(get_current_user), queryParams: dict = {}):
     sortBy = queryParams.get("sortBy")
     mapSort = {"Default": TaskModel.id, "Name": TaskModel.taskName, "Priority": TaskModel.taskPriority, "Deadline": TaskModel.taskDeadline, "Completion status": TaskModel.taskStatus}
 
@@ -171,8 +189,7 @@ async def index(request: Request, db: Session = Depends(get_db), user: dict = De
     else:
         filterBy = []
 
-    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "user": user})
-
+    return {"tasks": tasks, "sortBy": sortBy, "filterBy": filterBy}
 
 @app.post("/add_task")
 async def add_task(task: Task, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
