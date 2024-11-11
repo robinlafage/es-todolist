@@ -11,6 +11,7 @@ from databases import Database
 from jose import JWTError, jwt
 import requests
 import datetime
+import syslog
 
 app = FastAPI()
 templates = Jinja2Templates(directory="../html")
@@ -30,17 +31,22 @@ class TaskModel(Base):
     taskStatus = Column(Integer, nullable=True)
     taskDeadline = Column(DateTime, nullable=True)
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+try:
+    engine = create_engine(DATABASE_URL)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-database = Database(DATABASE_URL)
+    database = Database(DATABASE_URL)
 
-Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    syslog.syslog(syslog.LOG_ERR, f"Error while connecting to the database: {str(e)}")
 
 def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while connecting to the database: {str(e)}")
     finally:
         db.close()
 
@@ -53,12 +59,12 @@ class Task(BaseModel):
     taskStatus: int = 0
 
     model_config = {
-        "from_attributes": True  # Active la compatibilité avec SQLAlchemy
+        "from_attributes": True
     }
 
 # -------------------------------Authentication--------------------------------
 
-USER_ID = None # Variable globale pour stocker l'ID de l'utilisateur connecté
+USER_ID = None
 
 COGNITO_REGION = 'us-east-1'
 USER_POOL_ID = 'us-east-1_JlC5VFh6U'
@@ -83,7 +89,7 @@ async def get_current_user(id_token: str = Cookie(None), access_token: str = Coo
         payload = jwt.decode(access_token, jwks, algorithms=["RS256"], audience=CLIENT_ID)
         return payload
     except JWTError as e:
-        print(e)
+        syslog.syslog(syslog.LOG_ERR, f"Error while decoding JWT: {str(e)}")
         raise HTTPException(status_code=403, detail="Not authenticated")
 
 
@@ -103,28 +109,31 @@ def logout():
 
 @app.get("/callback")
 async def callback(code: str, response: RedirectResponse):
-    token_url = f"{COGNITO_DOMAIN}/oauth2/token"
-    token_data = {
-        'grant_type': 'authorization_code',
-        'client_id': CLIENT_ID,
-        'code': code,
-        'redirect_uri': REDIRECT_URI
-    }
-    token_headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    }
-    
-    token_response = requests.post(token_url, data=token_data, headers=token_headers).json()
+    try:
+        token_url = f"{COGNITO_DOMAIN}/oauth2/token"
+        token_data = {
+            'grant_type': 'authorization_code',
+            'client_id': CLIENT_ID,
+            'code': code,
+            'redirect_uri': REDIRECT_URI
+        }
+        token_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        token_response = requests.post(token_url, data=token_data, headers=token_headers).json()
 
-    if 'id_token' in token_response:
-        # Stocker le jeton dans un cookie sécurisé
-        response.set_cookie(key="id_token", value=token_response['id_token'], httponly=True, secure=True, samesite="lax")
-        response.set_cookie(key="access_token", value=token_response['access_token'], httponly=True, secure=True, samesite="lax")
-        response.status_code = 307
-        response.headers["location"] = "/"
-        return response
-    else:
-        print("oe")
+        if 'id_token' in token_response:
+            # Stocker le jeton dans un cookie sécurisé
+            response.set_cookie(key="id_token", value=token_response['id_token'], httponly=True, secure=True, samesite="lax")
+            response.set_cookie(key="access_token", value=token_response['access_token'], httponly=True, secure=True, samesite="lax")
+            response.status_code = 307
+            response.headers["location"] = "/"
+            return response
+        else:
+            raise HTTPException(status_code=400, detail="Authentication failed")
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while authenticating: {str(e)}")
         raise HTTPException(status_code=400, detail="Authentication failed")
     
 
@@ -132,64 +141,75 @@ async def callback(code: str, response: RedirectResponse):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    global USER_ID
-    USER_ID = user["sub"]
+    try:
+        global USER_ID
+        USER_ID = user["sub"]
 
-    queryParams = request.query_params
-    allTasks = await get_all_tasks(db, user, queryParams)
-    print(allTasks)
-    tasks = allTasks["tasks"]
-    sortBy = allTasks["sortBy"]
-    filterBy = allTasks["filterBy"]
-    
+        queryParams = request.query_params
+        allTasks = await get_all_tasks(db, user, queryParams)
+        print(allTasks)
+        tasks = allTasks["tasks"]
+        sortBy = allTasks["sortBy"]
+        filterBy = allTasks["filterBy"]
+        
 
-    print(tasks)
-    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "user": user})
+        print(tasks)
+        return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "user": user})
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while getting tasks: {str(e)}")
+        return RedirectResponse(url="/login")
 
 
 @app.get("/get_all_tasks")
 async def get_all_tasks(db: Session = Depends(get_db), user: dict = Depends(get_current_user), queryParams: dict = {}):
-    sortBy = queryParams.get("sortBy")
-    mapSort = {"Default": TaskModel.id, "Name": TaskModel.taskName, "Priority": TaskModel.taskPriority, "Deadline": TaskModel.taskDeadline, "Completion status": TaskModel.taskStatus}
+    try:
+        sortBy = queryParams.get("sortBy")
+        mapSort = {"Default": TaskModel.id, "Name": TaskModel.taskName, "Priority": TaskModel.taskPriority, "Deadline": TaskModel.taskDeadline, "Completion status": TaskModel.taskStatus}
 
-    if sortBy in mapSort:
-        tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy]).all()
-    else:
-        tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
+        if sortBy in mapSort:
+            if sortBy == "Priority":
+                tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy].desc()).all()
+            else:
+                tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy]).all()
+        else:
+            tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
 
-    filterBy = queryParams.get("filterBy")
-    if filterBy:
-        filterBy = filterBy.split()
-        print(f"Filter by: {filterBy}")
+        filterBy = queryParams.get("filterBy")
+        if filterBy:
+            filterBy = filterBy.split()
+            print(f"Filter by: {filterBy}")
 
-        filters = [TaskModel.userId == USER_ID]
+            filters = [TaskModel.userId == USER_ID]
 
-        status_filters = []
-        priority_filters = []
+            status_filters = []
+            priority_filters = []
 
-        for f in filterBy:
-            if f == "completed":
-                status_filters.append(TaskModel.taskStatus == 1)
-            elif f == "uncompleted":
-                status_filters.append(TaskModel.taskStatus == 0)
-            elif f == "high":
-                priority_filters.append(TaskModel.taskPriority == 3)
-            elif f == "medium":
-                priority_filters.append(TaskModel.taskPriority == 2)
-            elif f == "low":
-                priority_filters.append(TaskModel.taskPriority == 1)
+            for f in filterBy:
+                if f == "completed":
+                    status_filters.append(TaskModel.taskStatus == 1)
+                elif f == "uncompleted":
+                    status_filters.append(TaskModel.taskStatus == 0)
+                elif f == "high":
+                    priority_filters.append(TaskModel.taskPriority == 3)
+                elif f == "medium":
+                    priority_filters.append(TaskModel.taskPriority == 2)
+                elif f == "low":
+                    priority_filters.append(TaskModel.taskPriority == 1)
 
-        if status_filters:
-            filters.append(or_(*status_filters))
+            if status_filters:
+                filters.append(or_(*status_filters))
 
-        if priority_filters:
-            filters.append(or_(*priority_filters))
+            if priority_filters:
+                filters.append(or_(*priority_filters))
 
-        tasks = db.query(TaskModel).filter(*filters).order_by(TaskModel.id).all()
-    else:
-        filterBy = []
+            tasks = db.query(TaskModel).filter(*filters).order_by(TaskModel.id).all()
+        else:
+            filterBy = []
 
-    return {"tasks": tasks, "sortBy": sortBy, "filterBy": filterBy}
+        return {"tasks": tasks, "sortBy": sortBy, "filterBy": filterBy}
+    except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while getting tasks: {str(e)}")
+        return {"status": "error"}
 
 @app.post("/add_task")
 async def add_task(task: Task, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
@@ -202,6 +222,7 @@ async def add_task(task: Task, db: Session = Depends(get_db), user: dict = Depen
         db.refresh(newTask)
         return JSONResponse(content={"status": "success"})
     except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while adding task: {str(e)}")
         return JSONResponse(content={"status": "error", "message": str(e)})
     
 @app.post("/edit_task")
@@ -213,6 +234,7 @@ async def edit_task(task: Task, db: Session = Depends(get_db), user: dict = Depe
         db.commit()
         return JSONResponse(content={"status": "success"})
     except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while editing task: {str(e)}")
         return JSONResponse(content={"status": "error", "message": str(e)})
     
 @app.post("/delete_task")
@@ -224,6 +246,7 @@ async def delete_task(task: Task, db: Session = Depends(get_db), user: dict = De
         db.commit()
         return JSONResponse(content={"status": "success"})
     except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while deleting task: {str(e)}")
         return JSONResponse(content={"status": "error", "message": str(e)})
 
 @app.post("/change_status")
@@ -235,4 +258,5 @@ async def change_status(task: Task, db: Session = Depends(get_db), user: dict = 
         db.commit()
         return JSONResponse(content={"status": "success"})
     except Exception as e:
+        syslog.syslog(syslog.LOG_ERR, f"Error while changing status: {str(e)}")
         return JSONResponse(content={"status": "error", "message": str(e)})
