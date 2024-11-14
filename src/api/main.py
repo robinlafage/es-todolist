@@ -18,8 +18,8 @@ templates = Jinja2Templates(directory="../html")
 
 # -------------------------------Database--------------------------------
 Base = declarative_base()
-# DATABASE_URL = "sqlite:///./database2.db"
-DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
+DATABASE_URL = "sqlite:///./database.db"
+# DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
 
 class TaskModel(Base):
     __tablename__ = "Task"
@@ -47,6 +47,7 @@ def get_db():
         yield db
     except Exception as e:
         syslog.syslog(syslog.LOG_ERR, f"Error while connecting to the database: {str(e)}")
+        raise
     finally:
         db.close()
 
@@ -70,8 +71,8 @@ COGNITO_REGION = 'us-east-1'
 USER_POOL_ID = 'us-east-1_JlC5VFh6U'
 CLIENT_ID = '3fakplt730ef8nvvnd9oj2l6dv'
 COGNITO_DOMAIN = 'https://es-todolist.auth.us-east-1.amazoncognito.com'
-# REDIRECT_URI = 'http://localhost:8000/callback'
-REDIRECT_URI = 'https://es-ua.ddns.net/callback'
+REDIRECT_URI = 'http://localhost:8000/callback'
+# REDIRECT_URI = 'https://es-ua.ddns.net/callback'
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{COGNITO_DOMAIN}/oauth2/authorize",
@@ -151,10 +152,11 @@ async def index(request: Request, db: Session = Depends(get_db), user: dict = De
         tasks = allTasks["tasks"]
         sortBy = allTasks["sortBy"]
         filterBy = allTasks["filterBy"]
+        order = allTasks["order"]
         
 
-        print(tasks)
-        return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "user": user})
+        # print(tasks)
+        return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "order": order, "user": user})
     except Exception as e:
         syslog.syslog(syslog.LOG_ERR, f"Error while getting tasks: {str(e)}")
         return RedirectResponse(url="/login")
@@ -166,13 +168,19 @@ async def get_all_tasks(db: Session = Depends(get_db), user: dict = Depends(get_
         sortBy = queryParams.get("sortBy")
         mapSort = {"Default": TaskModel.id, "Name": TaskModel.taskName, "Priority": TaskModel.taskPriority, "Deadline": TaskModel.taskDeadline, "Completion status": TaskModel.taskStatus}
 
+        order = queryParams.get("order")
+        order = "" if order is None else order
+
         if sortBy in mapSort:
-            if sortBy == "Priority":
+            if order == "desc":
                 tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy].desc()).all()
             else:
                 tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(mapSort[sortBy]).all()
         else:
-            tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
+            if order == "desc":
+                tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id.desc()).all()
+            else:
+                tasks = db.query(TaskModel).filter(TaskModel.userId == USER_ID).order_by(TaskModel.id).all()
 
         filterBy = queryParams.get("filterBy")
         if filterBy:
@@ -206,7 +214,7 @@ async def get_all_tasks(db: Session = Depends(get_db), user: dict = Depends(get_
         else:
             filterBy = []
 
-        return {"tasks": tasks, "sortBy": sortBy, "filterBy": filterBy}
+        return {"tasks": tasks, "sortBy": sortBy, "filterBy": filterBy, "order": order}
     except Exception as e:
         syslog.syslog(syslog.LOG_ERR, f"Error while getting tasks: {str(e)}")
         return {"status": "error"}

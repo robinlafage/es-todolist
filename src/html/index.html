@@ -27,39 +27,57 @@
                 </div>
             </div>
         </div>
-    
+
         <div class="container mt-5">
             <div class="row w-100">
                 <div class="col-1"></div>
-                <div class="col">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">Add Task</button>
+                <div class="col-7">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#addTaskModal">Add Task</button>
+                </div>
+                <div class="col-1 text-end">
+                    <div class="btn btn-secondary" onclick="changeOrder()">
+                        <input type="hidden" id="order" value="{{ order }}">
+                        <i class="bi bi-arrow-down-up"></i>
+                    </div>
                 </div>
                 <div class="col-1 me-4">
                     <div class="dropdown">
-                        <button id="filterBy" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button id="filterBy" class="btn btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-funnel"></i> Filter by
                         </button>
                         <ul class="dropdown-menu">
                             <form id="filterForm">
                                 <li class="dropdown-item">
-                                    <input type="checkbox" class="form-check-input me-2" id="lowPriority" {% if 'low' in filterBy %} checked {% endif %}>
-                                    <label for="lowPriority" class="form-check-label" onclick="event.stopPropagation()">Priority : Low</label>
+                                    <input type="checkbox" class="form-check-input me-2" id="lowPriority" {% if 'low' in
+                                        filterBy %} checked {% endif %}>
+                                    <label for="lowPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : Low</label>
                                 </li>
                                 <li class="dropdown-item">
-                                    <input type="checkbox" class="form-check-input me-2" id="mediumPriority" {% if 'medium' in filterBy %} checked {% endif %}>
-                                    <label for="mediumPriority" class="form-check-label" onclick="event.stopPropagation()">Priority : Medium</label>
+                                    <input type="checkbox" class="form-check-input me-2" id="mediumPriority" {%
+                                        if 'medium' in filterBy %} checked {% endif %}>
+                                    <label for="mediumPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : Medium</label>
                                 </li>
                                 <li class="dropdown-item">
-                                    <input type="checkbox" class="form-check-input me-2" id="highPriority" {% if 'high' in filterBy %} checked {% endif %}>
-                                    <label for="highPriority" class="form-check-label" onclick="event.stopPropagation()">Priority : High</label>
+                                    <input type="checkbox" class="form-check-input me-2" id="highPriority" {% if 'high'
+                                        in filterBy %} checked {% endif %}>
+                                    <label for="highPriority" class="form-check-label"
+                                        onclick="event.stopPropagation()">Priority : High</label>
                                 </li>
                                 <li class="dropdown-item">
-                                    <input type="checkbox" class="form-check-input me-2" id="completed" {% if 'completed' in filterBy %} checked {% endif %}>
-                                    <label for="completed" class="form-check-label" onclick="event.stopPropagation()">Completed</label>
+                                    <input type="checkbox" class="form-check-input me-2" id="completed" {%
+                                        if 'completed' in filterBy %} checked {% endif %}>
+                                    <label for="completed" class="form-check-label"
+                                        onclick="event.stopPropagation()">Completed</label>
                                 </li>
                                 <li class="dropdown-item">
-                                    <input type="checkbox" class="form-check-input me-2" id="uncompleted" {% if 'uncompleted' in filterBy %} checked {% endif %}>
-                                    <label for="uncompleted" class="form-check-label" onclick="event.stopPropagation()">Uncompleted</label>
+                                    <input type="checkbox" class="form-check-input me-2" id="uncompleted" {%
+                                        if 'uncompleted' in filterBy %} checked {% endif %}>
+                                    <label for="uncompleted" class="form-check-label"
+                                        onclick="event.stopPropagation()">Uncompleted</label>
                                 </li>
                                 <li class="dropdown-item">
                                     <button type="submit" class="btn btn-sm btn-success">Apply filters</button>
@@ -67,10 +85,11 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-2">
+                <div class="col-1">
                     <div class="dropdown">
                         <input type="hidden" id="sortBySaved" value="{{ sortBy }}">
-                        <button id="sortBy" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button id="sortBy" class="btn btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             {% if sortBy == 'Default' or sortBy == None or sortBy == 'None' %}
                             Sort by
                             {% else %}
@@ -82,14 +101,15 @@
                             <li><a class="dropdown-item" onclick="sortBy('Name')">Name</a></li>
                             <li><a class="dropdown-item" onclick="sortBy('Deadline')">Deadline</a></li>
                             <li><a class="dropdown-item" onclick="sortBy('Priority')">Priority</a></li>
-                            <li><a class="dropdown-item" onclick="sortBy('Completion status')">Completion status</a></li>
+                            <li><a class="dropdown-item" onclick="sortBy('Completion status')">Completion status</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
-    
+
 
     <div class="row mt-5"></div>
     <div class="row mt-4"></div>
@@ -193,7 +213,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -214,7 +234,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -285,7 +305,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -306,7 +326,7 @@
                     const responseData = await response.json();
                     console.log(responseData);
 
-                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                    window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -342,7 +362,7 @@
                 const responseData = await response.json();
                 console.log(responseData);
 
-                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
             } catch (error) {
                 console.error(error.message);
             }
@@ -375,7 +395,7 @@
                 const responseData = await response.json();
                 console.log(responseData);
 
-                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value;
+                window.location.href = '/?sortBy=' + document.getElementById("sortBySaved").value + '&order=' + document.getElementById("order").value;
             } catch (error) {
                 console.error(error.message);
             }
@@ -393,6 +413,18 @@
             }
 
             window.location.href = '/?sortBy=' + sortBy;
+        }
+
+        function changeOrder() {
+            let orderElement = document.getElementById("order");
+            let currentOrder = orderElement.value;
+
+            let newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+
+            let sortBy = document.getElementById("sortBySaved").value;
+            
+            console.log(newOrder);
+            window.location.href = '/?sortBy=' + sortBy + '&order=' + newOrder;
         }
     </script>
 
