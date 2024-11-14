@@ -18,8 +18,8 @@ templates = Jinja2Templates(directory="../html")
 
 # -------------------------------Database--------------------------------
 Base = declarative_base()
-DATABASE_URL = "sqlite:///./database.db"
-# DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
+# DATABASE_URL = "sqlite:///./database.db"
+DATABASE_URL = "mysql+pymysql://admin:Motdepasse1!@todolist-database.c5uwuy0ymmo8.us-east-1.rds.amazonaws.com:3306/todolist_database"
 
 class TaskModel(Base):
     __tablename__ = "Task"
@@ -71,8 +71,8 @@ COGNITO_REGION = 'us-east-1'
 USER_POOL_ID = 'us-east-1_JlC5VFh6U'
 CLIENT_ID = '3fakplt730ef8nvvnd9oj2l6dv'
 COGNITO_DOMAIN = 'https://es-todolist.auth.us-east-1.amazoncognito.com'
-REDIRECT_URI = 'http://localhost:8000/callback'
-# REDIRECT_URI = 'https://es-ua.ddns.net/callback'
+# REDIRECT_URI = 'http://localhost:8000/callback'
+REDIRECT_URI = 'https://es-ua.ddns.net/callback'
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
     authorizationUrl=f"{COGNITO_DOMAIN}/oauth2/authorize",
