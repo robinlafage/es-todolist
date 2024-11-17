@@ -22,3 +22,7 @@ Task management
 | User confirms deletion           | The task is removed from the task list    |
 
 [Previous](/scrum18)
+
+<p align="right">
+    [Next](/scrum20)
+</p>

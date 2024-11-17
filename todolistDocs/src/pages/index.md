@@ -14,4 +14,4 @@ Robin Lafage
 
 - [Projet setup](/setup)
 - [User Stories](/userStories)
-- [API](http://127.0.0.1:8000/docs) <!-- Ajouter le lien vers todolist/docs une fois que ce sera déployé -->
+- [API](https://es-ua.ddns.net/docs)

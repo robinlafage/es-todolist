@@ -17,9 +17,7 @@ title: Project setup
 - **API**:
   - Python
   - FastAPI
-  - Uvicorn for local testing
 - **Database**:
-  - SQLite for local testing
   - MySQL for production
 - **User interface**:
   - HTML / CSS / JavaScript
@@ -35,23 +33,13 @@ title: Project setup
 
 ### Architecture
 
-![Architecture](/diagrams/architecture2.png)
+![Architecture](/diagrams/architecture.png)
 
 ### Database
 
-![Database](/diagrams/database.jpeg)
+![Database](/diagrams/database.png)
 
 ### VPC
 
 ![VPC](/diagrams/vpc.png)
-
-### Workflows
-
-#### Add a task
-
-![workflow1](/diagrams/workflow_add_task.jpeg)
-
-#### Authenticate
-
-![workflow2](/diagrams/workflow_connect.jpeg)
 

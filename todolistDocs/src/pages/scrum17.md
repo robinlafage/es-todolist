@@ -21,7 +21,7 @@ Task management
 | User clicks "Add Task" button           | A form to add a new task appears                             |
 | User fills in the title and description | The task is added to the task list with the provided details |
 
-[Previous](/userStories)
+[Previous](/scrum15)
 
 <p align="right">
     [Next](/scrum18)
