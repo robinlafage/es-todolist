@@ -14,4 +14,3 @@ Robin Lafage
 
 - [Projet setup](/setup)
 - [User Stories](/userStories)
-- [API](https://es-ua.ddns.net/docs)
